@@ -169,6 +169,10 @@ def get_args_parser():
                         help='number of distributed processes')
     #parser.add_argument('--dist_url', default='env://mnt/nfs/datasets/ILSVRC2012/', help='url used to set up distributed training')
     parser.add_argument('--dist_url', default='env://mnt/nfs/datasets/ILSVRC2012/', help='url used to set up distributed training')
+
+    #Wandb related
+    parser.add_argument('--resumeid', default='', type=str, help='Provide ID to resume check point',metavar='N')
+    
     return parser
 
 
@@ -182,14 +186,16 @@ def main(args):
 
     #######################-WANDB
     if utils.is_main_process():
-        id = wandb.util.generate_id()
-        print("ID: {id} ")
-        wandb.init(id=id, resume="allow")
-        # or via environment variables
-        os.environ["WANDB_RESUME"] = "allow"
-        os.environ["WANDB_RUN_ID"] = wandb.util.generate_id()
-        wandb.init(project="deit")
-        wandb.config.update(args)
+        if not args.resumeid:
+            init_id = wandb.util.generate_id()
+            print(f"Initial Wandb ID: {init_id} ")
+            wandb.init(id=init_id,resume="allow",project="deit")
+            wandb.config.update(args)
+        else:
+            resume_id = args.resumeid
+            print(f"Resumed Wandb ID: {resume_id} ")
+            wandb.init(id=resume_id,resume="auto",project="deit")
+            wandb.config.update(args,allow_val_change=True)
     ############################
 
     device = torch.device(args.device)
@@ -262,12 +268,7 @@ def main(args):
         drop_path_rate=args.drop_path,
         drop_block_rate=None,
     )
-
-    ##################### - WANDB
-    #if utils.is_main_process():  
-    #    wandb.config.update({"model": model.__class__.__name__})
-    #############################
-
+    
     if args.finetune:
         if args.finetune.startswith('https'):
             checkpoint = torch.hub.load_state_dict_from_url(
@@ -427,16 +428,17 @@ def main(args):
         if args.output_dir and utils.is_main_process():
             with (output_dir / "log.txt").open("a") as f:
                 f.write(json.dumps(log_stats) + "\n")
-
+        
+        ############### WANDB
         if utils.is_main_process():
             wandb.log({
                 'train_loss': train_stats['loss'],
-                #'train_acc': test_stats['acc1'],
                 'eval_loss': test_stats['loss'],
                 'eval_acc1': test_stats['acc1'],
-                'lr':train_stats['lr']
+                'lr':train_stats['lr'],
+                'Step':epoch,
                 })
-
+        ###############
     total_time = time.time() - start_time
     total_time_str = str(datetime.timedelta(seconds=int(total_time)))
     print('Training time {}'.format(total_time_str))
