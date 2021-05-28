@@ -3,7 +3,7 @@
 #$ -l rt_AF=1
 #$ -l h_rt=72:00:00
 #$ -j y
-#$ -o output/$JOB_ID-2K-1.3kim-PreTrain.out
+#$ -o output/$JOB_ID-Fractal1k.out
 
 ## Pyenv loading
 export PYENV_ROOT="$HOME/.pyenv"
@@ -34,7 +34,13 @@ cat deitPretrainA100.sh
 
 
 ## Fake + ILSVRC 2012 2K classes 1.3kimgs -- BASE_384 model
-python -m torch.distributed.launch --nproc_per_node=8 --use_env main.py --model deit_base_patch16_384 --input-size 384 --data-path /groups/gca50014/imnet/Fake_v1+ILSVRC2012-2kClass-1.3kimgs/  --data-set FakeReal2kClass --dist_url env://groups/gca50014/imnet/Fake_v1+ILSVRC2012-2kClass-1.3kimgs/ --batch-size 32 --resume preTrains/preTrain_base_384_2K-Epoch48/checkpoint.pth --output_dir preTrains/preTrain_base_384_2K-Epoch95 --resumeid qyd4hktq --start_epoch 95
+#python -m torch.distributed.launch --nproc_per_node=8 --use_env main.py --model deit_base_patch16_384 --input-size 384 --data-path /groups/gca50014/imnet/Fake_v1+ILSVRC2012-2kClass-1.3kimgs/  --data-set FakeReal2kClass --dist_url env://groups/gca50014/imnet/Fake_v1+ILSVRC2012-2kClass-1.3kimgs/ --batch-size 32 --resume preTrains/preTrain_base_384_2K-Epoch48/checkpoint.pth --output_dir preTrains/preTrain_base_384_2K-Epoch95 --resumeid qyd4hktq --start_epoch 95
+
+
+## Fractal 1k
+#python -m torch.distributed.launch --nproc_per_node=8 --use_env main.py --model deit_tiny_patch16_224 --input-size 224 --data-path /groups/gca50014/Fractal/Fractal1k-pointcolor/ --data-set FRACTAL1k --dist_url env://groups/gca50014/Fractal/Fractal1k-pointcolor/ --batch-size 1024 --output_dir preTrains/preTrain_Tiny_244_Fractal1k/
+
+python -m torch.distributed.launch --nproc_per_node=8 --use_env main.py --model deit_base_patch16_384 --input-size 384 --data-path /groups/gca50014/Fractal/Fractal1k-pointcolor/ --data-set FRACTAL1k --dist_url env://groups/gca50014/Fractal/Fractal1k-pointcolor/ --batch-size 32 --output_dir preTrains/preTrain_base_384_Fractal1k/
 
 
 ## Debuggin purposes???

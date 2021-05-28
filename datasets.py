@@ -64,6 +64,11 @@ def build_dataset(is_train, args):
         root = os.path.join(args.data_path, 'train' if is_train else 'val')
         dataset = datasets.ImageFolder(root, transform=transform)
         nb_classes = 1000
+    elif args.data_set == 'FRACTAL1k':
+        #root = os.path.join(args.data_path, 'train' if is_train else 'val')
+        root = os.path.join(args.data_path, 'train' if is_train else 'train')
+        dataset = datasets.ImageFolder(root, transform=transform)
+        nb_classes = 1000
     elif args.data_set == 'FakeIMNET':
         root = os.path.join(args.data_path, 'train' if is_train else 'val')
         dataset = datasets.ImageFolder(root, transform=transform)

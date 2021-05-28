@@ -141,7 +141,7 @@ def get_args_parser():
     # Dataset parameters
     parser.add_argument('--data-path', default='/mnt/nfs/datasets/ILSVRC2012/', type=str,
                         help='dataset path')
-    parser.add_argument('--data-set', default='IMNET', choices=['CIFAR', 'IMNET','FakeIMNET','FakeReal1k','FakeReal2kClass', 'INAT', 'INAT19'],
+    parser.add_argument('--data-set', default='IMNET', choices=['CIFAR', 'IMNET', 'FRACTAL1k','FakeIMNET','FakeReal1k','FakeReal2kClass', 'INAT', 'INAT19'],
                         type=str, help='Image Net dataset path')
     parser.add_argument('--inat-category', default='name',
                         choices=['kingdom', 'phylum', 'class', 'order', 'supercategory', 'family', 'genus', 'name'],
@@ -386,7 +386,7 @@ def main(args):
         test_stats = evaluate(data_loader_val, model, device)
         print(f"Accuracy of the network on the {len(dataset_val)} test images: {test_stats['acc1']:.1f}%")
         return
-
+###################################################################################### Train Loop
     print(f"Start training for {args.epochs} epochs")
     start_time = time.time()
     max_accuracy = 0.0
@@ -436,9 +436,11 @@ def main(args):
                 'eval_loss': test_stats['loss'],
                 'eval_acc1': test_stats['acc1'],
                 'lr':train_stats['lr'],
-                'Step':epoch,
+                '_step':epoch,
                 })
         ###############
+####################################################################################
+
     total_time = time.time() - start_time
     total_time_str = str(datetime.timedelta(seconds=int(total_time)))
     print('Training time {}'.format(total_time_str))

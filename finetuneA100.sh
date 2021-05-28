@@ -3,7 +3,7 @@
 #$ -l rt_AF=1
 #$ -l h_rt=72:00:00
 #$ -j y
-#$ -o output/$JOB_ID-Pre-FineTun-2K.out
+#$ -o output/$JOB_ID-FineTun-2kto1kReal.out
 
 ## Pyenv loading
 export PYENV_ROOT="$HOME/.pyenv"
@@ -26,23 +26,20 @@ wandb enabled
 echo "######################### START ########################################"
 cat finetuneA100.sh
 
-
 ############################ Benchmark with 8-GPUs on IMNET
-################################# - WANDB
+############################ WANDB
 
 ## Fake + ILSVRC 2012 2K classes 1.3kimgs -- SMALL model
-python -m torch.distributed.launch --nproc_per_node=8 --use_env main.py --model deit_small_patch16_224 --input-size 224 --data-path /groups/gca50014/imnet/Fake_v1+ILSVRC2012-2kClass-1.3kimgs/  --data-set FakeReal2kClass --dist_url env://groups/gca50014/imnet/Fake_v1+ILSVRC2012-2kClass-1.3kimgs/ --batch-size 512 --output_dir preTrain_small_244_2K-CheckP/
+#python -m torch.distributed.launch --nproc_per_node=8 --use_env main.py --model deit_small_patch16_224 --input-size 224 --data-path /groups/gca50014/imnet/ILSVRC2012  --data-set IMNET --dist_url env://groups/gca50014/imnet/ILSVRC2012  --finetune preTrains/preTrain_small_244_2K/checkpoint.pth --batch-size 256
+
+#python -m torch.distributed.launch --nproc_per_node=8 --use_env main.py --model deit_small_patch16_224 --input-size 224 --data-path /groups/gca50014/imnet/ILSVRC2012  --data-set IMNET --dist_url env://groups/gca50014/imnet/ILSVRC2012  --finetune preTrains/preTrain_small_244_2K/checkpoint.pth --batch-size 512
 
 ## Fake + ILSVRC 2012 2K classes 1.3kimgs -- BASE_384 model
-#python -m torch.distributed.launch --nproc_per_node=8 --use_env main.py --model deit_base_patch16_384 --input-size 384 --data-path /groups/gca50014/imnet/Fake_v1+ILSVRC2012-2kClass-1.3kimgs/  --data-set FakeReal2kClass --dist_url env://groups/gca50014/imnet/Fake_v1+ILSVRC2012-2kClass-1.3kimgs/ --batch-size 32 --output_dir preTrain_base_384_2K/
+# Cechkpoint from 127 epochs
+#python -m torch.distributed.launch --nproc_per_node=8 --use_env main.py --model deit_base_patch16_384 --input-size 384 --data-path /groups/gca50014/imnet/ILSVRC2012 --data-set IMNET --dist_url env://groups/gca50014/imnet/ILSVRC2012 --finetune preTrains/preTrain_base_384_2K-Epoch95/checkpoint.pth --batch-size 32
 
-
-## Resume work...
-## Fake + ILSVRC 2012 2K classes 1.3kimgs -- SMALL model
-#python -m torch.distributed.launch --nproc_per_node=8 --use_env main.py --model deit_small_patch16_224 --input-size 224 --resume preTrain_small_244_2K/checkpoint.pth --data-path /groups/gca50014/imnet/Fake_v1+ILSVRC2012-2kClass-1.3kimgs/  --data-set FakeReal2kClass --dist_url env://groups/gca50014/imnet/Fake_v1+ILSVRC2012-2kClass-1.3kimgs/ --batch-size 512 --output_dir preTrain_small_244_2K-E[229]/ 
-
-## Fake + ILSVRC 2012 2K classes 1.3kimgs -- BASE_384 model
-#python -m torch.distributed.launch --nproc_per_node=8 --use_env main.py --model deit_base_patch16_384 --input-size 384 --resume preTrain_base_384_2K/checkpoint.pth --data-path /groups/gca50014/imnet/Fake_v1+ILSVRC2012-2kClass-1.3kimgs/  --data-set FakeReal2kClass --dist_url env://groups/gca50014/imnet/Fake_v1+ILSVRC2012-2kClass-1.3kimgs/ --batch-size 32 --output_dir preTrain_base_384_2K-E[48]/
+# Cechkpoint from 127 epochs
+python -m torch.distributed.launch --nproc_per_node=8 --use_env main.py --model deit_base_patch16_384 --input-size 384 --data-path /groups/gca50014/imnet/ILSVRC2012 --data-set IMNET --dist_url env://groups/gca50014/imnet/ILSVRC2012 --finetune preTrains/preTrain_base_384_2K-Epoch95/checkpoint.pth --batch-size 56
 
 
 ## Debuggin purposes???
