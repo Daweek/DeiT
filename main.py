@@ -141,11 +141,13 @@ def get_args_parser():
     # Dataset parameters
     parser.add_argument('--data-path', default='/mnt/nfs/datasets/ILSVRC2012/', type=str,
                         help='dataset path')
-    parser.add_argument('--data-set', default='IMNET', choices=['CIFAR', 'IMNET', 'FRACTAL1k','FakeIMNET','FakeReal1k','FakeReal2kClass', 'INAT', 'INAT19'],
+    parser.add_argument('--data-set', default='IMNET', choices=['CIFAR', 'IMNET', 'FRACTAL1k','FakeIMNET','FakeReal1k','FakeReal2kClass','IMNET21k', 'INAT', 'INAT19'],
                         type=str, help='Image Net dataset path')
     parser.add_argument('--inat-category', default='name',
                         choices=['kingdom', 'phylum', 'class', 'order', 'supercategory', 'family', 'genus', 'name'],
                         type=str, help='semantic granularity')
+    parser.add_argument('--train-only', action='store_true',default=False, help='Do not include validation phase "val"')
+
 
     parser.add_argument('--output_dir', default='',
                         help='path where to save, empty for no saving')
@@ -208,8 +210,14 @@ def main(args):
 
     cudnn.benchmark = True
 
+    #################################### Building DataSet ##########################################
     dataset_train, args.nb_classes = build_dataset(is_train=True, args=args)
-    dataset_val, _ = build_dataset(is_train=False, args=args)
+
+    if not args.train_only:
+        dataset_val, _ = build_dataset(is_train=False, args=args)
+        
+    else:
+        print(f'Avoid Validation phase...')
 
     if True:  # args.distributed:
         num_tasks = utils.get_world_size()
@@ -222,15 +230,17 @@ def main(args):
             sampler_train = torch.utils.data.DistributedSampler(
                 dataset_train, num_replicas=num_tasks, rank=global_rank, shuffle=True
             )
-        if args.dist_eval:
-            if len(dataset_val) % num_tasks != 0:
-                print('Warning: Enabling distributed evaluation with an eval dataset not divisible by process number. '
-                      'This will slightly alter validation results as extra duplicate entries are added to achieve '
-                      'equal num of samples per-process.')
-            sampler_val = torch.utils.data.DistributedSampler(
-                dataset_val, num_replicas=num_tasks, rank=global_rank, shuffle=False)
-        else:
-            sampler_val = torch.utils.data.SequentialSampler(dataset_val)
+
+        if not args.train_only:
+            if args.dist_eval:
+                if len(dataset_val) % num_tasks != 0:
+                    print('Warning: Enabling distributed evaluation with an eval dataset not divisible by process number. '
+                        'This will slightly alter validation results as extra duplicate entries are added to achieve '
+                        'equal num of samples per-process.')
+                sampler_val = torch.utils.data.DistributedSampler(
+                    dataset_val, num_replicas=num_tasks, rank=global_rank, shuffle=False)
+            else:
+                sampler_val = torch.utils.data.SequentialSampler(dataset_val)
     else:
         sampler_train = torch.utils.data.RandomSampler(dataset_train)
         sampler_val = torch.utils.data.SequentialSampler(dataset_val)
@@ -243,14 +253,16 @@ def main(args):
         drop_last=True,
     )
 
-    data_loader_val = torch.utils.data.DataLoader(
-        dataset_val, sampler=sampler_val,
-        batch_size=int(1.5 * args.batch_size),
-        num_workers=args.num_workers,
-        pin_memory=args.pin_mem,
-        drop_last=False
-    )
+    if not args.train_only:
+        data_loader_val = torch.utils.data.DataLoader(
+            dataset_val, sampler=sampler_val,
+            batch_size=int(1.5 * args.batch_size),
+            num_workers=args.num_workers,
+            pin_memory=args.pin_mem,
+            drop_last=False
+        )
 
+    ##################################### Mix Up ################################################
     mixup_fn = None
     mixup_active = args.mixup > 0 or args.cutmix > 0. or args.cutmix_minmax is not None
     if mixup_active:
@@ -259,6 +271,7 @@ def main(args):
             prob=args.mixup_prob, switch_prob=args.mixup_switch_prob, mode=args.mixup_mode,
             label_smoothing=args.smoothing, num_classes=args.nb_classes)
 
+    ####################################  Create Model ##########################################
     print(f"Creating model: {args.model}")
     model = create_model(
         args.model,
@@ -269,6 +282,7 @@ def main(args):
         drop_block_rate=None,
     )
     
+    ################################## Fine Tunning ############################################
     if args.finetune:
         if args.finetune.startswith('https'):
             checkpoint = torch.hub.load_state_dict_from_url(
@@ -305,6 +319,7 @@ def main(args):
 
         model.load_state_dict(checkpoint_model, strict=False)
 
+    ################################ Model to device #############################################
     model.to(device)
 
     model_ema = None
@@ -340,6 +355,7 @@ def main(args):
     else:
         criterion = torch.nn.CrossEntropyLoss()
 
+    ################################ Teacher Model ###########################################
     teacher_model = None
     if args.distillation_type != 'none':
         assert args.teacher_path, 'need to specify teacher-path when using distillation'
@@ -365,6 +381,7 @@ def main(args):
         criterion, teacher_model, args.distillation_type, args.distillation_alpha, args.distillation_tau
     )
 
+    ############################## Check point and paths #######################################
     output_dir = Path(args.output_dir)
     if args.resume:
         if args.resume.startswith('https'):
@@ -386,7 +403,9 @@ def main(args):
         test_stats = evaluate(data_loader_val, model, device)
         print(f"Accuracy of the network on the {len(dataset_val)} test images: {test_stats['acc1']:.1f}%")
         return
-###################################################################################### Train Loop
+    
+    
+    ################################# Train Loop #####################################################
     print(f"Start training for {args.epochs} epochs")
     start_time = time.time()
     max_accuracy = 0.0
@@ -415,29 +434,40 @@ def main(args):
                     'args': args,
                 }, checkpoint_path)
 
-        test_stats = evaluate(data_loader_val, model, device)
-        print(f"Accuracy of the network on the {len(dataset_val)} test images: {test_stats['acc1']:.1f}%")
-        max_accuracy = max(max_accuracy, test_stats["acc1"])
-        print(f'Max accuracy: {max_accuracy:.2f}%')
-
-        log_stats = {**{f'train_{k}': v for k, v in train_stats.items()},
+        if not args.train_only:
+            test_stats = evaluate(data_loader_val, model, device)
+            print(f"Accuracy of the network on the {len(dataset_val)} test images: {test_stats['acc1']:.1f}%")
+            max_accuracy = max(max_accuracy, test_stats["acc1"])
+            print(f'Max accuracy: {max_accuracy:.2f}%')
+            log_stats = {**{f'train_{k}': v for k, v in train_stats.items()},
                      **{f'test_{k}': v for k, v in test_stats.items()},
                      'epoch': epoch,
                      'n_parameters': n_parameters}
+        else:
+            log_stats = {**{f'train_{k}': v for k, v in train_stats.items()},
+                        'epoch': epoch,'n_parameters': n_parameters}
 
         if args.output_dir and utils.is_main_process():
             with (output_dir / "log.txt").open("a") as f:
                 f.write(json.dumps(log_stats) + "\n")
         
         ############### WANDB
-        if utils.is_main_process():
-            wandb.log({
-                'train_loss': train_stats['loss'],
-                'eval_loss': test_stats['loss'],
-                'eval_acc1': test_stats['acc1'],
-                'lr':train_stats['lr'],
-                '_step':epoch,
-                })
+        if not args.train_only:
+            if utils.is_main_process():
+                wandb.log({
+                    'train_loss': train_stats['loss'],
+                    'eval_loss': test_stats['loss'],
+                    'eval_acc1': test_stats['acc1'],
+                    'lr':train_stats['lr'],
+                    '_step':epoch,
+                    })
+        else:
+            if utils.is_main_process():
+                wandb.log({
+                    'train_loss': train_stats['loss'],
+                    'lr':train_stats['lr'],
+                    '_step':epoch,
+                    })
         ###############
 ####################################################################################
 
