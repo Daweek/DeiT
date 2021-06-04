@@ -3,7 +3,7 @@
 #$ -l rt_AF=1
 #$ -l h_rt=72:00:00
 #$ -j y
-#$ -o output/$JOB_ID-Fractal1k.out
+#$ -o output/$JOB_ID-imnet21k.out
 
 ## Pyenv loading
 export PYENV_ROOT="$HOME/.pyenv"
@@ -16,9 +16,10 @@ eval "$(pyenv virtualenv-init -)"
 module purge
 module load openmpi/3.1.6 cuda/11.1/11.1.1 cudnn/8.0/8.0.5 nccl/2.8/2.8.4-1
 
-# No buffered python
 export PYTHONUNBUFFERED=1
 export PYTHONWARNINGS="ignore"
+
+#wandb disabled
 
 wandb enabled
 
@@ -47,8 +48,9 @@ cat deitPretrainA100.sh
 
 
 ## ImageNet 21k
-python -m torch.distributed.launch --nproc_per_node=8 --use_env main.py --model deit_tiny_patch16_224 --input-size 224 --data-path /groups/gca50014/imnet/ImageNet21k/ --data-set IMNET --dist_url env://groups/gca50014/imnet/ImageNet21k/ --batch-size 1024
+#python -m torch.distributed.launch --nproc_per_node=8 --use_env main.py --model deit_tiny_patch16_224 --input-size 224 --data-path /groups/gca50014/imnet/ImageNet21k/ --data-set IMNET21k --dist_url env://groups/gca50014/imnet/ImageNet21k/ --batch-size 1024 --train-only --output_dir preTrains/tiny_imnet21k_Epoch0
 
+python -m torch.distributed.launch --nproc_per_node=8 --use_env main.py --model deit_tiny_patch16_224  --input-size 224 --data-path /groups/gca50014/imnet/ImageNet21k/ --data-set IMNET21k --dist_url env://groups/gca50014/imnet/ImageNet21k/ --batch-size 1024 --train-only --resumeid 2vdfeiv9 --resume preTrains/tiny_imnet21k_Epoch1/checkpoint.pth  --output_dir preTrains/tiny_imnet21k_fromEpoch11 --start_epoch 11
 
 ## Debuggin purposes???
 echo "code=$?"

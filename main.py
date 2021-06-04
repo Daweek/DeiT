@@ -19,7 +19,7 @@ from timm.scheduler import create_scheduler
 from timm.utils import NativeScaler, get_state_dict, ModelEma
 
 from datasets import build_dataset
-from engine import train_one_epoch, evaluate
+from engine import train_one_epoch, evaluate, parser_one_epoch
 from losses import DistillationLoss
 from samplers import RASampler
 import models
@@ -27,6 +27,8 @@ import utils
 
 ## From Wandb
 import wandb
+from PIL import ImageFile
+ImageFile.LOAD_TRUNCATED_IMAGES = True
 
 def get_args_parser():
     parser = argparse.ArgumentParser('DeiT training and evaluation script', add_help=False)
@@ -253,6 +255,35 @@ def main(args):
         drop_last=True,
     )
 
+
+    ################################################### To only read Data base
+    if False:
+        for epoch in range(args.start_epoch, args.epochs):
+            
+            if args.distributed:
+                data_loader_train.sampler.set_epoch(epoch)
+            
+            parser_one_epoch(data_loader_train,device, epoch)  # keep in eval mode during finetuning
+            
+
+    
+
+        if False:
+            for epoch in range(args.start_epoch, args.epochs):
+                if args.distributed:
+                    data_loader_train.sampler.set_epoch(epoch)
+
+                for samples, targets in data_loader_train:
+                    samples = samples.to(device, non_blocking=True)
+                    targets = targets.to(device, non_blocking=True)
+
+                    torch.cuda.synchronize()
+                print('Epoch: [{}]'.format(epoch))
+
+
+        exit()
+    ######################################################
+
     if not args.train_only:
         data_loader_val = torch.utils.data.DataLoader(
             dataset_val, sampler=sampler_val,
@@ -419,7 +450,7 @@ def main(args):
             args.clip_grad, model_ema, mixup_fn,
             set_training_mode=args.finetune == ''  # keep in eval mode during finetuning
         )
-
+    
         lr_scheduler.step(epoch)
         if args.output_dir:
             checkpoint_paths = [output_dir / 'checkpoint.pth']
@@ -469,7 +500,7 @@ def main(args):
                     '_step':epoch,
                     })
         ###############
-####################################################################################
+    ####################################################################################
 
     total_time = time.time() - start_time
     total_time_str = str(datetime.timedelta(seconds=int(total_time)))
