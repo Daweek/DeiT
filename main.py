@@ -143,7 +143,7 @@ def get_args_parser():
     # Dataset parameters
     parser.add_argument('--data-path', default='/mnt/nfs/datasets/ILSVRC2012/', type=str,
                         help='dataset path')
-    parser.add_argument('--data-set', default='IMNET', choices=['CIFAR', 'IMNET', 'FRACTAL1k','FakeIMNET','FakeReal1k','FakeReal2kClass','IMNET21k', 'INAT', 'INAT19'],
+    parser.add_argument('--data-set', default='IMNET', choices=['CIFAR', 'IMNET', 'FRACTAL1k','FakeIMNET','FakeReal1k','FakeReal2kClass','IMNET21k','IMNET21k-P', 'INAT', 'INAT19'],
                         type=str, help='Image Net dataset path')
     parser.add_argument('--inat-category', default='name',
                         choices=['kingdom', 'phylum', 'class', 'order', 'supercategory', 'family', 'genus', 'name'],
@@ -172,10 +172,10 @@ def get_args_parser():
     parser.add_argument('--world_size', default=1, type=int,
                         help='number of distributed processes')
     #parser.add_argument('--dist_url', default='env://mnt/nfs/datasets/ILSVRC2012/', help='url used to set up distributed training')
-    parser.add_argument('--dist_url', default='env://mnt/nfs/datasets/ILSVRC2012/', help='url used to set up distributed training')
+    parser.add_argument('--dist_url', default='env://', help='url used to set up distributed training')
 
     #Wandb related
-    parser.add_argument('--resumeid', default='', type=str, help='Provide ID to resume check point',metavar='N')
+    parser.add_argument('--resumeid', default='', type=str, help='Provide Wandb ID to resume check point',metavar='N')
     
     return parser
 

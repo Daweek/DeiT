@@ -48,9 +48,22 @@ cat deitPretrainA100.sh
 
 
 ## ImageNet 21k
+### TINY_224
 #python -m torch.distributed.launch --nproc_per_node=8 --use_env main.py --model deit_tiny_patch16_224 --input-size 224 --data-path /groups/gca50014/imnet/ImageNet21k/ --data-set IMNET21k --dist_url env://groups/gca50014/imnet/ImageNet21k/ --batch-size 1024 --train-only --output_dir preTrains/tiny_imnet21k_Epoch0
 
-python -m torch.distributed.launch --nproc_per_node=8 --use_env main.py --model deit_tiny_patch16_224  --input-size 224 --data-path /groups/gca50014/imnet/ImageNet21k/ --data-set IMNET21k --dist_url env://groups/gca50014/imnet/ImageNet21k/ --batch-size 1024 --train-only --resumeid 2vdfeiv9 --resume preTrains/tiny_imnet21k_Epoch1/checkpoint.pth  --output_dir preTrains/tiny_imnet21k_fromEpoch11 --start_epoch 11
+#python -m torch.distributed.launch --nproc_per_node=8 --use_env main.py --model deit_tiny_patch16_224  --input-size 224 --data-path /groups/gca50014/imnet/ImageNet21k/ --data-set IMNET21k --dist_url env://groups/gca50014/imnet/ImageNet21k/ --batch-size 1024 --train-only --resumeid 2vdfeiv9 --resume preTrains/tiny_imnet21k_Epoch1/checkpoint.pth  --output_dir preTrains/tiny_imnet21k_fromEpoch11 --start_epoch 11
+
+#python -m torch.distributed.launch --nproc_per_node=8 --use_env main.py --model deit_tiny_patch16_224  --input-size 224 --data-path /groups/gca50014/imnet/ImageNet21k/ --data-set IMNET21k --dist_url env://groups/gca50014/imnet/ImageNet21k/ --batch-size 1024 --train-only --resumeid 2vdfeiv9 --resume preTrains/tiny_imnet21k_fromEpoch11/checkpoint.pth  --output_dir preTrains/tiny_imnet21k_fromEpoch58 --start_epoch 58
+
+### BASE_384
+
+#python -m torch.distributed.launch --nproc_per_node=8 --use_env main.py --model deit_base_patch16_384 --input-size 384 --data-path /groups/gca50014/imnet/ImageNet21k/ --data-set IMNET21k --dist_url env://groups/gca50014/imnet/ImageNet21k/ --batch-size 56 --train-only --output_dir preTrains/base384_imnet21k_fromEpoch0
+
+#python -m torch.distributed.launch --nproc_per_node=8 --use_env main.py --model deit_base_patch16_384 --input-size 384 --data-path /groups/gca50014/imnet/ImageNet21k/ --data-set IMNET21k --dist_url env://groups/gca50014/imnet/ImageNet21k/ --batch-size 56 --train-only --resumeid 22msm8g3 --resume preTrains/base384_imnet21k_fromEpoch0/checkpoint.pth --output_dir preTrains/base384_imnet21k_fromEpoch11 --start_epoch 11
+
+
+## ImageNet 21k - P
+python -m torch.distributed.launch --nproc_per_node=8 --use_env main.py --model deit_tiny_patch16_224 --input-size 224 --data-path /groups/gca50014/imnet/ImageNet-21K-P/trainval --data-set IMNET21k-P --batch-size 1024
 
 ## Debuggin purposes???
 echo "code=$?"
