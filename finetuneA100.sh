@@ -16,9 +16,10 @@ eval "$(pyenv virtualenv-init -)"
 module purge
 module load openmpi/3.1.6 cuda/11.1/11.1.1 cudnn/8.0/8.0.5 nccl/2.8/2.8.4-1
 
-# No buffered python
 export PYTHONUNBUFFERED=1
 export PYTHONWARNINGS="ignore"
+
+wandb disabled
 
 wandb enabled
 
