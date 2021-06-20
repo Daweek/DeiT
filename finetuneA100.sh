@@ -45,5 +45,28 @@ cat finetuneA100.sh
 ## Fine tune with adamw using Kataoka model on CIFAR
 python -m torch.distributed.launch --nproc_per_node=4 --use_env main.py --model deit_tiny_patch16_224 --input-size 224 --data-path data/ --data-set CIFAR --finetune preTrains/fractal/deitt16_224_fractal1k_lr3e-4_300ep.pth --batch-size 96 --drop-path=0.0  --lr=0.01 --weight-decay=1.0e-4 --warmup-epochs=10
 
+
+python -m torch.distributed.launch --nproc_per_node=8 --use_env main.py --model deit_base_patch16_384 --input-size 384 --data-path data/ --data-set CIFAR --dist_url env:// --finetune preTrain/preTrain_base_384_Fractal1k.pth --batch-size 32 --drop-path=0.0 --momentum=0.9 --lr=0.01 --weight-decay=1.0e-4 --warmup-epochs=10
+
+
+
+
+
+python finetune.py \
+ckpt=$CKPT \
+data=$DATA \
+data.set.root=$DATAROOT \
+data.transform.re_prob=0 \
+data.loader.batch_size=96 \
+model=deit_tiny_patch16_224 \
+model.drop_path_rate=0.0 \
+optim=momentum \
+optim.args.lr=0.01 \
+optim.args.weight_decay=1.0e-4 \
+scheduler.args.warmup_epochs=10
+
+
+  
+
 ## Debuggin purposes???
 echo "code=$?"
