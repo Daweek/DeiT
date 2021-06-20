@@ -40,8 +40,31 @@ cat finetuneA100.sh
 #python -m torch.distributed.launch --nproc_per_node=8 --use_env main.py --model deit_base_patch16_384 --input-size 384 --data-path /groups/gca50014/imnet/ILSVRC2012 --data-set IMNET --dist_url env://groups/gca50014/imnet/ILSVRC2012 --finetune preTrains/preTrain_base_384_2K-Epoch95/checkpoint.pth --batch-size 32
 
 # Cechkpoint from 127 epochs
-python -m torch.distributed.launch --nproc_per_node=8 --use_env main.py --model deit_base_patch16_384 --input-size 384 --data-path /groups/gca50014/imnet/ILSVRC2012 --data-set IMNET --dist_url env://groups/gca50014/imnet/ILSVRC2012 --finetune preTrains/preTrain_base_384_2K-Epoch95/checkpoint.pth --batch-size 56
+#python -m torch.distributed.launch --nproc_per_node=8 --use_env main.py --model deit_base_patch16_384 --input-size 384 --data-path /groups/gca50014/imnet/ILSVRC2012 --data-set IMNET --dist_url env://groups/gca50014/imnet/ILSVRC2012 --finetune preTrains/preTrain_base_384_2K-Epoch95/checkpoint.pth --batch-size 56
 
+
+
+python -m torch.distributed.launch --nproc_per_node=8 --use_env main.py --model deit_base_patch16_384 --input-size 384 --data-path data/ --data-set CIFAR --dist_url env:// --finetune preTrain/preTrain_base_384_Fractal1k.pth --batch-size 32 --drop-path=0.0 --momentum=0.9 --lr=0.01 --weight-decay=1.0e-4 --warmup-epochs=10
+
+
+
+
+
+python finetune.py \
+ckpt=$CKPT \
+data=$DATA \
+data.set.root=$DATAROOT \
+data.transform.re_prob=0 \
+data.loader.batch_size=96 \
+model=deit_tiny_patch16_224 \
+model.drop_path_rate=0.0 \
+optim=momentum \
+optim.args.lr=0.01 \
+optim.args.weight_decay=1.0e-4 \
+scheduler.args.warmup_epochs=10
+
+
+  
 
 ## Debuggin purposes???
 echo "code=$?"
