@@ -40,8 +40,10 @@ cat finetuneA100.sh
 #python -m torch.distributed.launch --nproc_per_node=8 --use_env main.py --model deit_base_patch16_384 --input-size 384 --data-path /groups/gca50014/imnet/ILSVRC2012 --data-set IMNET --dist_url env://groups/gca50014/imnet/ILSVRC2012 --finetune preTrains/preTrain_base_384_2K-Epoch95/checkpoint.pth --batch-size 32
 
 # Cechkpoint from 127 epochs
-python -m torch.distributed.launch --nproc_per_node=8 --use_env main.py --model deit_base_patch16_384 --input-size 384 --data-path /groups/gca50014/imnet/ILSVRC2012 --data-set IMNET --dist_url env://groups/gca50014/imnet/ILSVRC2012 --finetune preTrains/preTrain_base_384_2K-Epoch95/checkpoint.pth --batch-size 56
+#python -m torch.distributed.launch --nproc_per_node=8 --use_env main.py --model deit_base_patch16_384 --input-size 384 --data-path /groups/gca50014/imnet/ILSVRC2012 --data-set IMNET --dist_url env://groups/gca50014/imnet/ILSVRC2012 --finetune preTrains/preTrain_base_384_2K-Epoch95/checkpoint.pth --batch-size 56
 
+## Fine tune with adamw using Kataoka model on CIFAR
+python -m torch.distributed.launch --nproc_per_node=4 --use_env main.py --model deit_tiny_patch16_224 --input-size 224 --data-path data/ --data-set CIFAR --finetune preTrains/fractal/deitt16_224_fractal1k_lr3e-4_300ep.pth --batch-size 96 --drop-path=0.0  --lr=0.01 --weight-decay=1.0e-4 --warmup-epochs=10
 
 ## Debuggin purposes???
 echo "code=$?"
