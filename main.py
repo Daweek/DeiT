@@ -100,6 +100,7 @@ def get_args_parser():
     parser.add_argument('--smoothing', type=float, default=0.1, help='Label smoothing (default: 0.1)')
     parser.add_argument('--train-interpolation', type=str, default='bicubic',
                         help='Training interpolation (random, bilinear, bicubic default: "bicubic")')
+    parser.add_argument('--hflip', type=float, default=0.5,help='Horizontal flip training aug probability')
 
     parser.add_argument('--repeated-aug', action='store_true')
     parser.add_argument('--no-repeated-aug', action='store_false', dest='repeated_aug')
@@ -143,7 +144,7 @@ def get_args_parser():
     # Dataset parameters
     parser.add_argument('--data-path', default='/mnt/nfs/datasets/ILSVRC2012/', type=str,
                         help='dataset path')
-    parser.add_argument('--data-set', default='IMNET', choices=['CIFAR', 'IMNET', 'FRACTAL1k','FakeIMNET','FakeReal1k','FakeReal2kClass','IMNET21k','IMNET21k-P', 'INAT', 'INAT19'],
+    parser.add_argument('--data-set', default='IMNET', choices=['CIFAR', 'IMNET', 'FRACTAL1k','FRACTAL10k','FRACTAL21k_i676','FRACTAL50k','FakeIMNET','FakeReal1k','FakeReal2kClass','IMNET21k','IMNET21k-P', 'INAT', 'INAT19'],
                         type=str, help='Image Net dataset path')
     parser.add_argument('--inat-category', default='name',
                         choices=['kingdom', 'phylum', 'class', 'order', 'supercategory', 'family', 'genus', 'name'],

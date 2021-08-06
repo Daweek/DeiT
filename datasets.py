@@ -69,6 +69,21 @@ def build_dataset(is_train, args):
         root = os.path.join(args.data_path, 'train' if is_train else 'train')
         dataset = datasets.ImageFolder(root, transform=transform)
         nb_classes = 1000
+    elif args.data_set == 'FRACTAL10k':
+        #root = os.path.join(args.data_path, 'train' if is_train else 'val')
+        root = os.path.join(args.data_path, 'train' if is_train else 'train')
+        dataset = datasets.ImageFolder(root, transform=transform)
+        nb_classes = 10000
+    elif args.data_set == 'FRACTAL21k_i676':
+        #root = os.path.join(args.data_path, 'train' if is_train else 'val')
+        root = os.path.join(args.data_path, 'train' if is_train else 'train')
+        dataset = datasets.ImageFolder(root, transform=transform)
+        nb_classes = 21000
+    elif args.data_set == 'FRACTAL50k':
+        #root = os.path.join(args.data_path, 'train' if is_train else 'val')
+        root = os.path.join(args.data_path, 'train' if is_train else 'train')
+        dataset = datasets.ImageFolder(root, transform=transform)
+        nb_classes = 50000
     elif args.data_set == 'FakeIMNET':
         root = os.path.join(args.data_path, 'train' if is_train else 'val')
         dataset = datasets.ImageFolder(root, transform=transform)

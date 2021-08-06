@@ -44,8 +44,10 @@ cat deitPretrainHinadori.sh
 
 ############### Using EdRender FractalDB
 ### Fractal 1k Patch-Gray
-python -m torch.distributed.launch --nproc_per_node=8 --use_env main.py --model deit_tiny_patch16_224 --input-size 224 --data-path /mnt/nfs/datasets/FractalDB/FractalDB-1000_PATCHGRAY --data-set FRACTAL1k --batch-size 544 --output_dir preTrains/Tiny_244_EdREnder_Fractal1k-Gray/ --train-only --lr=3.0e-4 --warmup-epochs=10 --epochs 1000
+#python -m torch.distributed.launch --nproc_per_node=8 --use_env main.py --model deit_tiny_patch16_224 --input-size 224 --data-path /mnt/nfs/datasets/FractalDB/FractalDB-1000_PATCHGRAY --data-set FRACTAL1k --output_dir preTrains/Tiny_244_DefaultHyper_EdREnder_Fractal1k-Gray/ --train-only 
 
+### Fractal 1k Patch-Color
+python -m torch.distributed.launch --nproc_per_node=8 --use_env main.py --model deit_tiny_patch16_224 --input-size 224 --data-path /mnt/nfs/datasets/FractalDB/FractalDB-1000_PATCHCOLOR --data-set FRACTAL1k --output_dir preTrains/Tiny_244_DefaultHyper_EdREnder_Fractal1k-Gray/ --train-only 
 
 
 #python pretrain.py \

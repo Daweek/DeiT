@@ -3,7 +3,7 @@
 #$ -l rt_AF=1
 #$ -l h_rt=72:00:00
 #$ -j y
-#$ -o output/$JOB_ID-imnet21k.out
+#$ -o output/$JOB_ID-Fractal1k.out
 
 ## Pyenv loading
 export PYENV_ROOT="$HOME/.pyenv"
@@ -27,10 +27,12 @@ wandb enabled
 echo "######################### START ########################################"
 cat deitPretrainA100.sh
 
-############################ Benchmark with 8-GPUs on IMNET
+############################ Benchmark with 8-GPUs on IMNETls
 ############################ WANDB
 ################## ILSVRC 2012 -- SMALL model
 #python -m torch.distributed.launch --nproc_per_node=8 --use_env main.py --model deit_tiny_patch16_224 --input-size 224 --data-path /groups/gca50014/imnet/ILSVRC2012  --data-set IMNET --dist_url env://groups/gca50014/imnet/ILSVRC2012 --batch-size 1024
+
+#python -m torch.distributed.launch --nproc_per_node=8 --use_env main.py --model deit_tiny_patch16_224 --input-size 224 --data-path /groups/gca50014/imnet/ILSVRC2012  --data-set IMNET --output_dir preTrains/Tiny_224_DeafaultHyper_IMNET1k_for50Epochs/ --epochs 50
 
 
 ## Fake + ILSVRC 2012 2K classes 1.3kimgs -- SMALL model
@@ -86,15 +88,66 @@ cat deitPretrainA100.sh
 
 #python -m torch.distributed.launch --nproc_per_node=8 --use_env main.py --model deit_base_patch16_384 --input-size 384 --data-path /groups/gca50014/imnet/ImageNet-21K-P/trainval --data-set IMNET21k-P --batch-size 56 --resumeid 23cqmeup --resume preTrains/base384_21k-P_fromEpoch12/checkpoint.pth  --output_dir preTrains/base384_21k-P_fromEpoch24 --start_epoch 24
 
-python -m torch.distributed.launch --nproc_per_node=8 --use_env main.py --model deit_base_patch16_384 --input-size 384 --data-path /groups/gca50014/imnet/ImageNet-21K-P/trainval --data-set IMNET21k-P --batch-size 56 --resumeid 23cqmeup --resume preTrains/base384_21k-P_fromEpoch24/checkpoint.pth  --output_dir preTrains/base384_21k-P_fromEpoch35 --start_epoch 35
+#python -m torch.distributed.launch --nproc_per_node=8 --use_env main.py --model deit_base_patch16_384 --input-size 384 --data-path /groups/gca50014/imnet/ImageNet-21K-P/trainval --data-set IMNET21k-P --batch-size 56 --resumeid 23cqmeup --resume preTrains/base384_21k-P_fromEpoch24/checkpoint.pth  --output_dir preTrains/base384_21k-P_fromEpoch35 --start_epoch 35
 
-
-##
+###################### Fractal Original Data Base from Kataoka
+#python -m torch.distributed.launch --nproc_per_node=8 --use_env main.py --model deit_tiny_patch16_224 --input-size 224 --data-path /groups/gca50014/Fractal/org/FractalDB-1k-Gray --data-set FRACTAL1k --batch-size 96 --output_dir preTrains/Tiny_244_DSfromKataoka_momentum_bs96_Fractal1k-Gray/ --aa rand-m9-mstd0.5-inc1   --train-only --opt momentum --lr=3.0e-4 --warmup-epochs=10 --epochs 300
 
 ## Trainning CIFAR from scracth
 #python -m torch.distributed.launch --nproc_per_node=4 --use_env main.py --model deit_tiny_patch16_224 --input-size 224 --data-path data/ --data-set CIFAR --batch-size 96 --drop-path=0.0 --opt sgd --momentum=0.9 --lr=0.01 --weight-decay=1.0e-4 --warmup-epochs=10 --output_dir preTrains/tiny224_CIFAR10
 
 
+
+################## PreTrain with Sora's Hyperparameters on Kataokas DB
+#python -m torch.distributed.launch --nproc_per_node=8 --use_env main.py --model deit_tiny_patch16_224 --input-size 224 --data-path /groups/gca50014/Fractal/org/FractalDB-1k-Gray --data-set FRACTAL1k --opt adamw --batch-size 64 --epochs 300 --cooldown-epochs 0 --lr 6.0e-4 --sched cosine --warmup-epochs 10 --weight-decay 0.05 --smoothing 0.1 --drop-path 0.1 --aa rand-m9-mstd0.5-inc1 --repeated-aug --mixup 0.8 --cutmix 1.0 --reprob 0.25 --remode pixel --train-interpolation bicubic --hflip 0.0 --output_dir preTrains/Tiny_244_SORAsHyper_KataokasDB/ --train-only
+
+
+################## PreTrain with Sora's Hyperparameters on EdRender DB
+#python -m torch.distributed.launch --nproc_per_node=8 --use_env main.py --model deit_tiny_patch16_224 --input-size 224 --data-path /groups/gca50014/Fractal/FractalDB-1000_PATCHGRAY --data-set FRACTAL1k --opt adamw --batch-size 64 --epochs 300 --cooldown-epochs 0 --lr 6.0e-4 --sched cosine --warmup-epochs 10 --weight-decay 0.05 --smoothing 0.1 --drop-path 0.1 --aa rand-m9-mstd0.5-inc1 --repeated-aug --mixup 0.8 --cutmix 1.0 --reprob 0.25 --remode pixel --train-interpolation bicubic --hflip 0.0 --output_dir preTrains/Tiny_244_SORAsHyper_EdRernderDB/ --train-only
+
+# Sora san's hyperparameters
+
+#fractalDB_pretrain.py /groups/gcd50691/datasets/FractalDB-1k-Gray --model vit_deit_tiny_patch16_224 --opt adamw --batch-size 64 --epochs 300 --cooldown-epochs 0 --lr 6.0e-4 --sched cosine --warmup-epochs 10 --weight-decay 0.05 --smoothing 0.1 --drop-path 0.1 --aa rand-m9-mstd0.5-inc1 --repeated-aug --mixup 0.8 --cutmix 1.0 --reprob 0.25 --remode pixel --interpolation bicubic --hflip 0.0 --eval-metric loss --log-wandb --output train_result --experiment PreTraining_vit_deit_tiny_patch16_224_fractalDB_1k_gray -j 8
+
+
+################# Pre train with default hyperparameters
+## Kataokas DB 1k
+#python -m torch.distributed.launch --nproc_per_node=8 --use_env main.py --model deit_tiny_patch16_224 --input-size 224 --data-path /groups/gca50014/Fractal/org/FractalDB-1k-Gray --data-set FRACTAL1k  --output_dir preTrains/Tiny_244_DefaultHyper_KataokasDB/ --train-only
+
+## Kataokas DB 10k - Color
+#python -m torch.distributed.launch --nproc_per_node=8 --use_env main.py --model deit_tiny_patch16_224 --input-size 224 --data-path /groups/gca50014/Fractal/org/FractalDB-10k-Color --data-set FRACTAL10k  --output_dir preTrains/Tiny_244_DefaultHyper_KataokasDB_10kColor/ --train-only
+
+#python -m torch.distributed.launch --nproc_per_node=8 --use_env main.py --model deit_tiny_patch16_224 --input-size 224 --data-path /groups/gca50014/Fractal/org/FractalDB-10k-Color --data-set FRACTAL10k --train-only --resumeid 26vpvjya --resume preTrains/Tiny_244_DefaultHyper_KataokasDB_10kColor/checkpoint.pth --output_dir preTrains/Tiny_244_DefaultHyper_KataokasDB_10kColor_fromEp48/ --start_epoch 48
+
+## EdRender DB 10k Patch Gray
+#python -m torch.distributed.launch --nproc_per_node=8 --use_env main.py --model deit_tiny_patch16_224 --input-size 224 --data-path /groups/gca50014/Fractal/edRender/x256/FractalDB-10000_PATCHGRAY/ --data-set FRACTAL10k  --output_dir preTrains/Tiny_244_DefaultHyper_EdRenderDB_10kGray/ --train-only
+
+
+## EdRender DB- Gray
+#python -m torch.distributed.launch --nproc_per_node=8 --use_env main.py --model deit_tiny_patch16_224 --input-size 224 --data-path /groups/gca50014/Fractal/edRender/FractalDB-1000_PATCHGRAY --data-set FRACTAL1k  --output_dir preTrains/Tiny_244_DefaultHyper_KataokasDB_Gray/ --train-only
+
+#python -m torch.distributed.launch --nproc_per_node=8 --use_env main.py --model deit_tiny_patch16_224 --input-size 224 --data-path /groups/gca50014/Fractal/edRender/FractalDB-1000_PATCHGRAY --data-set FRACTAL1k  --output_dir preTrains/Tiny_244_DefaultHyper_EdRenderDB_Gray_Ep50/ --train-only --epochs 50
+
+## EdRender DB- Color
+#python -m torch.distributed.launch --nproc_per_node=8 --use_env main.py --model deit_tiny_patch16_224 --input-size 224 --data-path /groups/gca50014/Fractal/FractalDB-1000_PATCHCOLOR --data-set FRACTAL1k  --output_dir preTrains/Tiny_244_DefaultHyper_KataokasDB_Color/ --train-only
+
+#python -m torch.distributed.launch --nproc_per_node=8 --use_env main.py --model deit_tiny_patch16_224 --input-size 224 --data-path /groups/gca50014/Fractal/edRender/FractalDB-1000_PATCHCOLOR --data-set FRACTAL1k  --output_dir preTrains/Tiny_244_DefaultHyper_KataokasDB_Color_50Epochs/ --train-only --epochs 50
+
+
+## EdRender DB- Gray x256
+#python -m torch.distributed.launch --nproc_per_node=8 --use_env main.py --model deit_tiny_patch16_224 --input-size 224 --data-path /groups/gca50014/Fractal/edRender/x256/FractalDB-1000_PATCHGRAY --data-set FRACTAL1k  --output_dir preTrains/Tiny_244_DefaultHyper_EdRenderDB_Gray_x256/ --train-only
+
+## EdRender 21k i676 x256 
+#python -m torch.distributed.launch --nproc_per_node=8 --use_env main.py --model deit_tiny_patch16_224 --input-size 224 --data-path /groups/gca50014/Fractal/edRender/x256/FractalDB-21000_PATCHGRAY_i676 --data-set FRACTAL21k_i676 --output_dir preTrains/Tiny_244_DefaultHyper_Fractal21Ki676_8GPUs/ --train-only
+
+## EdRender 21k i1k x256 
+#python -m torch.distributed.launch --nproc_per_node=8 --use_env main.py --model deit_tiny_patch16_224 --input-size 224 --data-path /groups/gca50014/Fractal/edRender/x256/FractalDB-21000_PATCHGRAY --data-set FRACTAL21k_i676 --output_dir preTrains/Tiny_244_DefaultHyper_Fractal21k_i1k_8GPUs/ --train-only 
+
+## One node to pretrain Fractal 21k
+#python -m torch.distributed.launch --nproc_per_node=8 --use_env main.py --model deit_tiny_patch16_224 --input-size 224 --data-path /groups/gca50014/Fractal/edRender/x256/FractalDB-21000_PATCHGRAY_i676 --data-set FRACTAL21k_i676 --train-only --resumeid 2rplgkys --resume preTrains/Tiny_244_DefaultHyper_Fractal21Ki676_fromE222/checkpoint.pth --output_dir preTrains/Tiny_244_DefaultHyper_Fractal21Ki676_fromE278_8gpus --start_epoch 278 --batch-size 1024
+
+## One node to pretrain Fractal 21k, 1k class
+python -m torch.distributed.launch --nproc_per_node=8 --use_env main.py --model deit_tiny_patch16_224 --input-size 224 --data-path /groups/gca50014/Fractal/edRender/x256/FractalDB-21000_PATCHGRAY --data-set FRACTAL21k_i676 --train-only --resumeid 14k2n2jm --resume preTrains/Tiny_244_DefaultHyper_Fractal21Ki1000_fromE236/checkpoint.pth --output_dir preTrains/Tiny_244_DefaultHyper_Fractal21Ki1000_fromE252/ --start_epoch 252 --batch-size 1024
 
 ## Debuggin purposes???
 echo "code=$?"

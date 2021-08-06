@@ -3,7 +3,7 @@
 #$ -l rt_F=1
 #$ -l h_rt=72:00:00
 #$ -j y
-#$ -o output/$JOB_ID-MASTERimnet21k.out
+#$ -o output/$JOB_ID-MasterLarge.out
 
 ## Pyenv loading
 export PYENV_ROOT="$HOME/.pyenv"
@@ -27,9 +27,10 @@ wandb enabled
 echo "######################### START ########################################"
 cat deitPretrainV100.sh
 
-export MASTER_ADDR=$(/usr/sbin/ip a show dev bond0 | grep inet | cut -d " " -f 6 | cut -d "/" -f 1)
+export MASTER_ADDR=$(/usr/sbin/ip a show dev bond0 | grep -w inet | cut -d " " -f 6 | cut -d "/" -f 1)
 
-nodos=8
+nodos=64
+echo "\n"
 echo $MASTER_ADDR
 
 ############################ Benchmark with 4-GPUs on IMNET
@@ -37,7 +38,16 @@ echo $MASTER_ADDR
 ## ILSVRC 2012 -- SMALL model
 #python -m torch.distributed.launch --nproc_per_node=4 --use_env main.py --model deit_tiny_patch16_224 --input-size 224 --data-path /groups/gca50014/imnet/ILSVRC2012  --data-set IMNET --dist_url env://groups/gca50014/imnet/ILSVRC2012 --batch-size 512
 
-python -m torch.distributed.launch --nproc_per_node=4 --nnodes=${nodos} --node_rank=0 --master_addr=$MASTER_ADDR --master_port=1234 --use_env main.py --model deit_tiny_patch16_224 --input-size 224 --data-path /groups/gca50014/imnet/ILSVRC2012  --data-set IMNET --dist_url env://groups/gca50014/imnet/ILSVRC2012 --batch-size 416
+############################ Pre-Train FractalDB-21K_i676
+#python -m torch.distributed.launch --nproc_per_node=4 --nnodes=${nodos} --node_rank=0 --master_addr=$MASTER_ADDR --master_port=1234 --use_env main.py --model deit_tiny_patch16_224 --input-size 224 --data-path /groups/gca50014/Fractal/edRender/x256/FractalDB-21000_PATCHGRAY_i676 --data-set FRACTAL21k_i676 --output_dir preTrains/Tiny_244_DefaultHyper_Fractal21Ki676/ --train-only --batch-size 32 
+
+############################ Pre-Train FractalDB-21K_i1k
+#python -m torch.distributed.launch --nproc_per_node=4 --nnodes=${nodos} --node_rank=0 --master_addr=$MASTER_ADDR --master_port=1234 --use_env main.py --model deit_tiny_patch16_224 --input-size 224 --data-path /groups/gca50014/Fractal/edRender/x256/FractalDB-21000_PATCHGRAY --data-set FRACTAL21k_i676 --output_dir preTrains/Tiny_244_DefaultHyper_Fractal21k_i1k/ --train-only 
+
+############################ Pre-Train FractalDB-50K
+python -m torch.distributed.launch --nproc_per_node=4 --nnodes=${nodos} --node_rank=0 --master_addr=$MASTER_ADDR --master_port=1234 --use_env main.py --model deit_tiny_patch16_224 --input-size 224 --data-path /groups/gca50014/Fractal/edRender/x256/FractalDB-50000_PATCHGRAY --data-set FRACTAL50k --output_dir preTrains/Tiny_244_DefaultHyper_Fractal50k/ --train-only
+
+
 
 ## Debuggin purposes???
 echo "code=$?"
