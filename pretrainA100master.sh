@@ -31,7 +31,7 @@ cat pretrainA100master.sh
 export MASTER_ADDR=$(/usr/sbin/ip a show dev bond0 | grep -w inet | cut -d " " -f 6 | cut -d "/" -f 1)
 
 nodos=8
-echo "\n"
+echo " "
 echo $MASTER_ADDR
 
 ############################ Benchmark with 8-GPUs on IMNET
@@ -69,8 +69,10 @@ echo $MASTER_ADDR
 
 #python -m torch.distributed.launch --nproc_per_node=8 --nnodes=${nodos} --node_rank=0 --master_addr=$MASTER_ADDR --master_port=1234 --use_env main.py --model deit_tiny_patch16_224 --input-size 224 --data-path /groups/gca50014/Fractal/edRender/x256/FractalDB-50000_PATCHGRAY --data-set FRACTAL50k --resumeid 22zry7zp --resume preTrains/Tiny_244_DefaultHyper_Fractal50k/checkpoint.pth --output_dir preTrains/Tiny_244_DefaultHyper_Fractal50k_E69/ --start_epoch 69 --train-only
 
-python -m torch.distributed.launch --nproc_per_node=8 --nnodes=${nodos} --node_rank=0 --master_addr=$MASTER_ADDR --master_port=1234 --use_env main.py --model deit_tiny_patch16_224 --input-size 224 --data-path /groups/gca50014/Fractal/edRender/x256/FractalDB-50000_PATCHGRAY --data-set FRACTAL50k --resumeid 22zry7zp --resume preTrains/Tiny_244_DefaultHyper_Fractal50k_E69/checkpoint.pth --output_dir preTrains/Tiny_244_DefaultHyper_Fractal50k_E118/ --start_epoch 118 --train-only
+#python -m torch.distributed.launch --nproc_per_node=8 --nnodes=${nodos} --node_rank=0 --master_addr=$MASTER_ADDR --master_port=1234 --use_env main.py --model deit_tiny_patch16_224 --input-size 224 --data-path /groups/gca50014/Fractal/edRender/x256/FractalDB-50000_PATCHGRAY --data-set FRACTAL50k --resumeid 22zry7zp --resume preTrains/Tiny_244_DefaultHyper_Fractal50k_E69/checkpoint.pth --output_dir preTrains/Tiny_244_DefaultHyper_Fractal50k_E118/ --start_epoch 118 --train-only
 
+
+python -m torch.distributed.launch --nproc_per_node=8 --nnodes=${nodos} --node_rank=0 --master_addr=$MASTER_ADDR --master_port=1234 --use_env main.py --model deit_tiny_patch16_224 --input-size 224 --data-path /groups/gca50014/Fractal/edRender/x256/FractalDB-50000_PATCHGRAY --data-set FRACTAL50k --resumeid 22zry7zp --resume preTrains/Tiny_244_DefaultHyper_Fractal50k_E118/checkpoint.pth --output_dir preTrains/Tiny_244_DefaultHyper_Fractal50k_E165/ --start_epoch 165 --train-only
 
 ###################################### FINE TUNE #################################################
 ## Facebook model Imnet 1k with bs 512, 2 nodes
